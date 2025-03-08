@@ -19,8 +19,8 @@ import {
 import styles from './ArticleParamsForm.module.scss';
 
 type ArticleFormConfigProps = {
-	currentState: ArticleStateType;
-	onApply: (newState: ArticleStateType) => void;
+	articleState: ArticleStateType;
+	setArticleState: (newState: ArticleStateType) => void;
 };
 
 type FormFieldConfig = {
@@ -73,35 +73,42 @@ const formConfig: FormFieldConfig[] = [
 ];
 
 export const ArticleParamsForm = ({
-	currentState,
-	onApply,
+	articleState,
+	setArticleState,
 }: ArticleFormConfigProps) => {
 	const formRef = useRef<HTMLDivElement>(null);
-	const [isOpen, setIsOpen] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [formState, setFormState] = useState(defaultArticleState);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		onApply({ ...currentState, ...formState });
+		setArticleState({ ...articleState, ...formState });
 	};
 
 	const handleReset = () => {
 		setFormState(defaultArticleState);
-		onApply(defaultArticleState);
+		setArticleState(defaultArticleState);
 	};
 
 	useOutsideClickClose({
 		rootRef: formRef,
-		isOpen,
-		onClose: () => setIsOpen(false),
-		onChange: () => {}, // Добавлен пустой обработчик
+		isOpen: isMenuOpen,
+		onClose: () => setIsMenuOpen(false),
+		onChange: () => {},
 	});
+
+	const setIsOpenClass = clsx(
+		styles.container,
+		isMenuOpen && styles.container_open
+	);
 
 	return (
 		<div ref={formRef}>
-			<ArrowButton onClick={() => setIsOpen(!isOpen)} isOpen={isOpen} />
-			<aside
-				className={clsx(styles.container, isOpen && styles.container_open)}>
+			<ArrowButton
+				onClick={() => setIsMenuOpen(!isMenuOpen)}
+				isOpen={isMenuOpen}
+			/>
+			<aside className={setIsOpenClass}>
 				<form
 					className={styles.form}
 					onReset={handleReset}
@@ -121,18 +128,14 @@ export const ArticleParamsForm = ({
 
 						if (config.type === 'select') {
 							return (
-								<Select
-									key={key} // Add key here
-									{...commonProps}
-									options={config.options}
-								/>
+								<Select key={key} {...commonProps} options={config.options} />
 							);
 						}
 
 						if (config.type === 'radio') {
 							return (
 								<RadioGroup
-									key={key} // Add key here
+									key={key}
 									{...commonProps}
 									options={config.options}
 									name={config.name}
